@@ -1,0 +1,123 @@
+/**
+ * KodNest Premium Build System — Layout Structure
+ * [Top Bar] → [Context Header] → [Primary Workspace + Secondary Panel] → [Proof Footer]
+ */
+
+/* ========== ROOT LAYOUT ========== */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== TOP BAR ========== */
+.topbar {
+  height: var(--topbar-height);
+  padding: 0 var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: var(--border);
+  background-color: var(--color-background);
+}
+
+.topbar__project {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.topbar__progress {
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+}
+
+.topbar__status .badge {
+  margin-left: var(--space-2);
+}
+
+/* ========== CONTEXT HEADER ========== */
+.context-header {
+  padding: var(--space-4) var(--space-4) var(--space-3);
+}
+
+.context-header__title {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-heading-xl);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-tight);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.context-header__subtext {
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ========== MAIN CONTENT (Workspace + Panel) ========== */
+.main-content {
+  flex: 1;
+  display: flex;
+  padding: 0 var(--space-4) var(--space-4);
+  gap: var(--space-4);
+  min-height: 0;
+}
+
+/* ========== PRIMARY WORKSPACE (70%) ========== */
+.workspace {
+  flex: 0 0 var(--workspace-ratio);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ========== SECONDARY PANEL (30%) ========== */
+.panel {
+  flex: 0 0 var(--panel-ratio);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.panel__title {
+  font-size: var(--font-size-heading-md);
+  font-family: var(--font-serif);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.panel__description {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+/* ========== PROOF FOOTER ========== */
+.proof-footer {
+  height: var(--footer-height);
+  padding: 0 var(--space-4);
+  display: flex;
+  align-items: center;
+  border-top: var(--border);
+  background-color: var(--color-background);
+}
+
+.proof-footer .checklist {
+  display: flex;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.proof-footer .checklist__item {
+  padding: 0;
+}

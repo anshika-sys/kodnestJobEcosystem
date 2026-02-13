@@ -1,0 +1,58 @@
+/**
+ * KodNest Premium Build System — Error & Empty States
+ * Errors: explain what went wrong + how to fix, never blame user
+ * Empty states: provide next action, never feel dead
+ */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.empty-state__title {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-heading-md);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.empty-state__text {
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+  max-width: var(--measure);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.empty-state__action {
+  margin-top: var(--space-2);
+}
+
+/* ========== ERROR STATE ========== */
+.error-state {
+  padding: var(--space-3);
+  background-color: rgba(154, 123, 79, 0.08);
+  border: 1px solid rgba(154, 123, 79, 0.3);
+  border-radius: var(--radius);
+}
+
+.error-state__title {
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.error-state__text {
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.error-state__fix {
+  font-size: var(--font-size-small);
+  color: var(--color-text-primary);
+  margin: 0;
+}

@@ -1,0 +1,149 @@
+/**
+ * KodNest Premium Build System — Components
+ * Same hover effect and border radius everywhere
+ */
+
+/* ========== BUTTONS ========== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  line-height: 1;
+  border-radius: var(--radius);
+  border: var(--border-width) solid transparent;
+  cursor: pointer;
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.btn--primary {
+  background-color: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+
+.btn--primary:hover {
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.btn--secondary {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.btn--secondary:hover {
+  background-color: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+}
+
+/* ========== INPUTS ========== */
+.input {
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background-color: white;
+  border: var(--border);
+  border-radius: var(--radius);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 1px var(--color-border-focus);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+textarea.input {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ========== CARDS ========== */
+.card {
+  background-color: white;
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  /* No drop shadows */
+}
+
+.card--compact {
+  padding: var(--space-2);
+}
+
+/* ========== BADGE ========== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-small);
+  font-weight: 500;
+  border-radius: var(--radius);
+  border: var(--border);
+}
+
+.badge--not-started {
+  background-color: var(--color-background);
+  color: var(--color-text-muted);
+}
+
+.badge--in-progress {
+  background-color: var(--color-accent-subtle);
+  color: var(--color-accent);
+  border-color: rgba(139, 0, 0, 0.2);
+}
+
+.badge--shipped {
+  background-color: rgba(74, 107, 74, 0.12);
+  color: var(--color-success);
+  border-color: rgba(74, 107, 74, 0.25);
+}
+
+/* ========== PROMPT BOX (copyable) ========== */
+.prompt-box {
+  position: relative;
+  background-color: var(--color-background);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2);
+  font-family: monospace;
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-body);
+  color: var(--color-text-primary);
+}
+
+/* ========== CHECKLIST ========== */
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.checklist__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  font-size: var(--font-size-body);
+}
+
+.checklist__checkbox {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}

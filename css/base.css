@@ -1,0 +1,71 @@
+/**
+ * KodNest Premium Build System — Base Styles
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+}
+
+/* Typography — Headings: Serif, confident */
+h1, h2, h3, .heading-xl, .heading-lg, .heading-md {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.heading-xl, h1 { font-size: var(--font-size-heading-xl); }
+.heading-lg, h2 { font-size: var(--font-size-heading-lg); }
+.heading-md, h3 { font-size: var(--font-size-heading-md); }
+
+/* Body text — clean, 16–18px, line-height 1.6–1.8, max 720px */
+p, .body-text {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-relaxed);
+  max-width: var(--measure);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.body-text--compact {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-small {
+  font-size: var(--font-size-small);
+}
+
+.text-caption {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+/* Focus states — accessible */
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
