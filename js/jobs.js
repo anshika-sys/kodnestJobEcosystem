@@ -3,6 +3,129 @@
  */
 
 const STORAGE_KEY = 'job-tracker-saved-ids';
+const PREFERENCES_KEY = 'jobTrackerPreferences';
+
+const DEFAULT_PREFERENCES = {
+  roleKeywords: '',
+  preferredLocations: [],
+  preferredMode: [],
+  experienceLevel: '',
+  skills: '',
+  minMatchScore: 40
+};
+
+function getPreferences() {
+  try {
+    const raw = localStorage.getItem(PREFERENCES_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return {
+      ...DEFAULT_PREFERENCES,
+      ...parsed,
+      minMatchScore: Math.min(100, Math.max(0, parsed.minMatchScore ?? 40))
+    };
+  } catch {
+    return null;
+  }
+}
+
+function savePreferences(prefs) {
+  const normalized = {
+    roleKeywords: String(prefs.roleKeywords ?? '').trim(),
+    preferredLocations: Array.isArray(prefs.preferredLocations) ? prefs.preferredLocations : [],
+    preferredMode: Array.isArray(prefs.preferredMode) ? prefs.preferredMode : [],
+    experienceLevel: String(prefs.experienceLevel ?? '').trim(),
+    skills: String(prefs.skills ?? '').trim(),
+    minMatchScore: Math.min(100, Math.max(0, Number(prefs.minMatchScore) || 40))
+  };
+  localStorage.setItem(PREFERENCES_KEY, JSON.stringify(normalized));
+  return normalized;
+}
+
+function parseCommaList(str) {
+  return String(str || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/**
+ * Match score engine — deterministic rules per specification:
+ * +25 any roleKeyword in job.title (case-insensitive)
+ * +15 any roleKeyword in job.description
+ * +15 job.location in preferredLocations
+ * +10 job.mode in preferredMode
+ * +10 job.experience matches experienceLevel
+ * +15 overlap between job.skills and user skills (any match)
+ * +5 if postedDaysAgo <= 2
+ * +5 if source is LinkedIn
+ * Cap at 100
+ */
+function computeMatchScore(job, prefs) {
+  if (!prefs) return null;
+
+  let score = 0;
+  const roleKeywords = parseCommaList(prefs.roleKeywords);
+  const userSkills = parseCommaList(prefs.skills);
+  const titleLower = (job.title || '').toLowerCase();
+  const descLower = (job.description || '').toLowerCase();
+
+  if (roleKeywords.length) {
+    for (const kw of roleKeywords) {
+      if (titleLower.includes(kw)) {
+        score += 25;
+        break;
+      }
+    }
+  }
+
+  if (roleKeywords.length) {
+    for (const kw of roleKeywords) {
+      if (descLower.includes(kw)) {
+        score += 15;
+        break;
+      }
+    }
+  }
+
+  const prefsLoc = (prefs.preferredLocations || []).map((l) => String(l).toLowerCase());
+  if (prefsLoc.length && prefsLoc.includes((job.location || '').toLowerCase())) {
+    score += 15;
+  }
+
+  const prefsMode = (prefs.preferredMode || []).map((m) => String(m).toLowerCase());
+  if (prefsMode.length && prefsMode.includes((job.mode || '').toLowerCase())) {
+    score += 10;
+  }
+
+  if (prefs.experienceLevel && String(job.experience || '').toLowerCase() === String(prefs.experienceLevel).toLowerCase()) {
+    score += 10;
+  }
+
+  if (userSkills.length && job.skills && Array.isArray(job.skills)) {
+    const jobSkills = job.skills.map((s) => String(s).toLowerCase());
+    const overlap = userSkills.some((us) => jobSkills.some((js) => js === us || js.includes(us) || us.includes(js)));
+    if (overlap) score += 15;
+  }
+
+  if ((job.postedDaysAgo ?? 99) <= 2) {
+    score += 5;
+  }
+
+  if (String(job.source || '').toLowerCase() === 'linkedin') {
+    score += 5;
+  }
+
+  return Math.min(100, score);
+}
+
+function getMatchScoreBadgeClass(score) {
+  if (score == null) return 'match-badge--none';
+  if (score >= 80) return 'match-badge--high';
+  if (score >= 60) return 'match-badge--medium';
+  if (score >= 40) return 'match-badge--low';
+  return 'match-badge--minimal';
+}
 
 function getSavedIds() {
   try {
@@ -36,47 +159,60 @@ function formatPosted(days) {
   return `${days} days ago`;
 }
 
-function filterAndSortJobs(jobs, filters) {
-  let result = [...jobs];
+function filterAndSortJobs(jobs, filters, prefs) {
+  let result = jobs.map((j) => ({
+    ...j,
+    matchScore: computeMatchScore(j, prefs)
+  }));
+
+  if (filters.showOnlyMatches && prefs) {
+    const threshold = prefs.minMatchScore ?? 40;
+    result = result.filter((j) => j.matchScore != null && j.matchScore >= threshold);
+  }
 
   if (filters.keyword) {
     const k = filters.keyword.toLowerCase();
     result = result.filter(
       (j) =>
-        j.title.toLowerCase().includes(k) ||
-        j.company.toLowerCase().includes(k)
+        (j.title || '').toLowerCase().includes(k) ||
+        (j.company || '').toLowerCase().includes(k)
     );
   }
   if (filters.location) {
     result = result.filter(
-      (j) => j.location.toLowerCase() === filters.location.toLowerCase()
+      (j) => (j.location || '').toLowerCase() === filters.location.toLowerCase()
     );
   }
   if (filters.mode) {
     result = result.filter(
-      (j) => j.mode.toLowerCase() === filters.mode.toLowerCase()
+      (j) => (j.mode || '').toLowerCase() === filters.mode.toLowerCase()
     );
   }
   if (filters.experience) {
     result = result.filter(
-      (j) => j.experience.toLowerCase() === filters.experience.toLowerCase()
+      (j) => (j.experience || '').toLowerCase() === filters.experience.toLowerCase()
     );
   }
   if (filters.source) {
     result = result.filter(
-      (j) => j.source.toLowerCase() === filters.source.toLowerCase()
+      (j) => (j.source || '').toLowerCase() === filters.source.toLowerCase()
     );
   }
 
-  if (filters.sort === 'salary') {
-    const order = { '₹15k': 0, '3–5': 1, '6–10': 2, '10–18': 3 };
-    result.sort((a, b) => {
-      const sa = Object.keys(order).find((k) => a.salaryRange.startsWith(k));
-      const sb = Object.keys(order).find((k) => b.salaryRange.startsWith(k));
-      return (order[sa] ?? -1) - (order[sb] ?? -1);
-    });
+  if (filters.sort === 'match') {
+    result.sort((a, b) => (b.matchScore ?? -1) - (a.matchScore ?? -1));
+  } else if (filters.sort === 'salary') {
+    const salaryOrder = (sr) => {
+      if (!sr) return -1;
+      if (sr.startsWith('₹')) return 0;
+      if (sr.startsWith('3–5') || sr.startsWith('3-5')) return 1;
+      if (sr.startsWith('6–10') || sr.startsWith('6-10')) return 2;
+      if (sr.startsWith('10–18') || sr.startsWith('10-18')) return 3;
+      return -1;
+    };
+    result.sort((a, b) => salaryOrder(a.salaryRange) - salaryOrder(b.salaryRange));
   } else {
-    result.sort((a, b) => a.postedDaysAgo - b.postedDaysAgo);
+    result.sort((a, b) => (a.postedDaysAgo ?? 99) - (b.postedDaysAgo ?? 99));
   }
 
   return result;
@@ -93,12 +229,23 @@ function getFilterOptions(jobs) {
 function renderJobCard(job, options = {}) {
   const saved = isSaved(job.id);
   const showUnsave = options.showUnsave ?? false;
+  const matchScore = job.matchScore;
+  const showMatchBadge = options.showMatchBadge ?? false;
+  const scoreBadgeClass = getMatchScoreBadgeClass(matchScore);
+  const scoreBadgeHtml = showMatchBadge && matchScore != null
+    ? `<span class="match-badge ${scoreBadgeClass}">${matchScore}%</span>`
+    : showMatchBadge
+    ? `<span class="match-badge match-badge--none">—</span>`
+    : '';
 
   return `
     <article class="job-card card" data-id="${job.id}">
       <div class="job-card__header">
         <h3 class="job-card__title">${escapeHtml(job.title)}</h3>
-        <span class="job-card__source badge badge--not-started">${escapeHtml(job.source)}</span>
+        <div class="job-card__badges">
+          ${scoreBadgeHtml}
+          <span class="job-card__source badge badge--not-started">${escapeHtml(job.source)}</span>
+        </div>
       </div>
       <p class="job-card__company">${escapeHtml(job.company)}</p>
       <div class="job-card__meta">

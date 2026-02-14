@@ -18,7 +18,8 @@ let currentFilters = {
   mode: '',
   experience: '',
   source: '',
-  sort: 'latest'
+  sort: 'latest',
+  showOnlyMatches: false
 };
 
 function getRoute() {
@@ -37,45 +38,71 @@ function renderLanding() {
 }
 
 function renderSettings() {
+  const prefs = getPreferences();
+  const opts = getFilterOptions(JOBS_DATA);
+  const roleKeywords = escapeHtml((prefs && prefs.roleKeywords) || '');
+  const skills = escapeHtml((prefs && prefs.skills) || '');
+  const minScore = (prefs && prefs.minMatchScore) ?? 40;
+  const expLevel = (prefs && prefs.experienceLevel) || '';
+  const prefsLoc = (prefs && prefs.preferredLocations) || [];
+  const prefsMode = (prefs && prefs.preferredMode) || [];
+
+  const locOptions = opts.locations.map((l) =>
+    `<option value="${escapeHtml(l)}" ${prefsLoc.includes(l) ? 'selected' : ''}>${escapeHtml(l)}</option>`
+  ).join('');
+
+  const expOptions = opts.experiences.map((e) =>
+    `<option value="${escapeHtml(e)}" ${expLevel === e ? 'selected' : ''}>${escapeHtml(e)}</option>`
+  ).join('');
+
   return `
     <section class="settings-page">
       <h1 class="settings-page__title">Settings</h1>
-      <p class="settings-page__subtext">Configure your job preferences.</p>
-      <div class="card settings-page__form">
+      <p class="settings-page__subtext">Configure your job preferences for intelligent matching.</p>
+      <form class="card settings-page__form" id="settings-form">
         <div class="form-field">
           <label class="form-field__label" for="role-keywords">Role keywords</label>
-          <input type="text" id="role-keywords" class="input" placeholder="e.g. Frontend, React, Product Manager">
+          <input type="text" id="role-keywords" class="input" name="roleKeywords" placeholder="e.g. Frontend, React, SDE Intern" value="${roleKeywords}">
         </div>
         <div class="form-field">
-          <label class="form-field__label" for="locations">Preferred locations</label>
-          <input type="text" id="locations" class="input" placeholder="e.g. Bangalore, Remote, Mumbai">
-        </div>
-        <div class="form-field">
-          <label class="form-field__label" for="mode">Mode</label>
-          <select id="mode" class="input">
-            <option value="">Select mode</option>
-            <option value="remote">Remote</option>
-            <option value="hybrid">Hybrid</option>
-            <option value="onsite">Onsite</option>
+          <label class="form-field__label" for="preferred-locations">Preferred locations</label>
+          <select id="preferred-locations" class="input" name="preferredLocations" multiple size="5">
+            ${locOptions}
           </select>
+          <span class="form-field__hint">Hold Ctrl/Cmd to select multiple</span>
         </div>
         <div class="form-field">
-          <label class="form-field__label" for="experience">Experience level</label>
-          <select id="experience" class="input">
+          <span class="form-field__label">Preferred mode</span>
+          <div class="form-field__checkboxes">
+            <label class="checkbox-label"><input type="checkbox" name="preferredMode" value="Remote" ${prefsMode.includes('Remote') ? 'checked' : ''}> Remote</label>
+            <label class="checkbox-label"><input type="checkbox" name="preferredMode" value="Hybrid" ${prefsMode.includes('Hybrid') ? 'checked' : ''}> Hybrid</label>
+            <label class="checkbox-label"><input type="checkbox" name="preferredMode" value="Onsite" ${prefsMode.includes('Onsite') ? 'checked' : ''}> Onsite</label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-field__label" for="experience-level">Experience level</label>
+          <select id="experience-level" class="input" name="experienceLevel">
             <option value="">Select experience</option>
-            <option value="entry">Entry</option>
-            <option value="mid">Mid</option>
-            <option value="senior">Senior</option>
-            <option value="lead">Lead</option>
+            ${expOptions}
           </select>
         </div>
-      </div>
+        <div class="form-field">
+          <label class="form-field__label" for="skills">Skills</label>
+          <input type="text" id="skills" class="input" name="skills" placeholder="e.g. React, Python, SQL" value="${skills}">
+        </div>
+        <div class="form-field">
+          <label class="form-field__label" for="min-match-score">Minimum match threshold: <span id="min-score-value">${minScore}</span>%</label>
+          <input type="range" id="min-match-score" name="minMatchScore" min="0" max="100" value="${minScore}" class="slider">
+        </div>
+        <button type="submit" class="btn btn--primary">Save preferences</button>
+      </form>
     </section>
   `;
 }
 
 function renderFilterBar() {
   const opts = getFilterOptions(JOBS_DATA);
+  const prefs = getPreferences();
   return `
     <div class="filter-bar card">
       <input type="text" class="input filter-bar__search" placeholder="Search by title or company" id="filter-keyword" value="${escapeHtml(currentFilters.keyword)}">
@@ -97,9 +124,18 @@ function renderFilterBar() {
       </select>
       <select class="input filter-bar__select" id="filter-sort">
         <option value="latest" ${currentFilters.sort === 'latest' ? 'selected' : ''}>Latest</option>
+        <option value="match" ${currentFilters.sort === 'match' ? 'selected' : ''}>Match score</option>
         <option value="salary" ${currentFilters.sort === 'salary' ? 'selected' : ''}>Salary (low to high)</option>
       </select>
     </div>
+    ${prefs ? `
+    <div class="filter-toggle">
+      <label class="toggle-label">
+        <input type="checkbox" id="show-only-matches" ${currentFilters.showOnlyMatches ? 'checked' : ''}>
+        <span>Show only jobs above my threshold</span>
+      </label>
+    </div>
+    ` : ''}
   `;
 }
 
@@ -111,16 +147,26 @@ function escapeHtml(text) {
 }
 
 function renderDashboard() {
-  const filtered = filterAndSortJobs(JOBS_DATA, currentFilters);
+  const prefs = getPreferences();
+  const filtered = filterAndSortJobs(JOBS_DATA, currentFilters, prefs);
   const filterBar = renderFilterBar();
-  const jobsHtml = filtered.length
-    ? `<div class="job-grid">${filtered.map((j) => renderJobCard(j, { showUnsave: true })).join('')}</div>`
-    : '<p class="empty-state__text">No jobs match your filters. Try adjusting the filter criteria.</p>';
+  const showMatchBadge = !!prefs;
+  const noPrefsBanner = !prefs
+    ? '<div class="prefs-banner"><a href="#/settings">Set your preferences to activate intelligent matching.</a></div>'
+    : '';
+
+  let jobsHtml;
+  if (filtered.length === 0) {
+    jobsHtml = '<section class="empty-state empty-state--centered"><h2 class="empty-state__title">No matches</h2><p class="empty-state__text">No roles match your criteria. Adjust filters or lower threshold.</p></section>';
+  } else {
+    jobsHtml = `<div class="job-grid">${filtered.map((j) => renderJobCard(j, { showUnsave: true, showMatchBadge })).join('')}</div>`;
+  }
 
   return `
     <section class="dashboard-page">
       <h1 class="dashboard-page__title">Dashboard</h1>
       <p class="dashboard-page__subtext">Browse and save jobs that match your interests.</p>
+      ${noPrefsBanner}
       ${filterBar}
       ${jobsHtml}
     </section>
@@ -190,6 +236,9 @@ function bindPageEvents(route) {
   if (route === 'dashboard') {
     bindFilterEvents();
   }
+  if (route === 'settings') {
+    bindSettingsEvents();
+  }
 
   document.getElementById('page-content')?.addEventListener('click', (e) => {
     const viewBtn = e.target.closest('.js-view-job');
@@ -221,6 +270,7 @@ function bindFilterEvents() {
   const experience = document.getElementById('filter-experience');
   const source = document.getElementById('filter-source');
   const sort = document.getElementById('filter-sort');
+  const showOnlyMatches = document.getElementById('show-only-matches');
 
   const applyFilters = () => {
     currentFilters = {
@@ -229,7 +279,8 @@ function bindFilterEvents() {
       mode: mode?.value || '',
       experience: experience?.value || '',
       source: source?.value || '',
-      sort: sort?.value || 'latest'
+      sort: sort?.value || 'latest',
+      showOnlyMatches: showOnlyMatches?.checked ?? false
     };
     renderPage('dashboard');
   };
@@ -240,6 +291,43 @@ function bindFilterEvents() {
   experience?.addEventListener('change', applyFilters);
   source?.addEventListener('change', applyFilters);
   sort?.addEventListener('change', applyFilters);
+  showOnlyMatches?.addEventListener('change', applyFilters);
+}
+
+function bindSettingsEvents() {
+  const form = document.getElementById('settings-form');
+  const slider = document.getElementById('min-match-score');
+  const scoreValue = document.getElementById('min-score-value');
+
+  slider?.addEventListener('input', () => {
+    if (scoreValue) scoreValue.textContent = slider.value;
+  });
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const preferredLocations = [];
+    const locSelect = form.querySelector('#preferred-locations');
+    if (locSelect && locSelect.selectedOptions) {
+      for (const opt of locSelect.selectedOptions) {
+        if (opt.value) preferredLocations.push(opt.value);
+      }
+    }
+    const preferredMode = [];
+    form.querySelectorAll('input[name="preferredMode"]:checked').forEach((cb) => {
+      preferredMode.push(cb.value);
+    });
+    const prefs = {
+      roleKeywords: fd.get('roleKeywords') || '',
+      preferredLocations,
+      preferredMode,
+      experienceLevel: fd.get('experienceLevel') || '',
+      skills: fd.get('skills') || '',
+      minMatchScore: Number(fd.get('minMatchScore')) || 40
+    };
+    savePreferences(prefs);
+    window.location.hash = '#/dashboard';
+  });
 }
 
 function debounce(fn, ms) {

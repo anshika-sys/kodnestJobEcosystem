@@ -242,6 +242,13 @@
   gap: var(--space-2);
 }
 
+.job-card__badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
 .job-card__title {
   font-family: var(--font-sans);
   font-size: var(--font-size-heading-md);
@@ -345,6 +352,122 @@
 
 .modal__close {
   margin-top: var(--space-2);
+}
+
+/* ========== MATCH SCORE BADGE ========== */
+.match-badge {
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+  padding: 2px var(--space-1);
+  border-radius: var(--radius);
+}
+
+.match-badge--high {
+  background-color: rgba(74, 107, 74, 0.2);
+  color: var(--color-success);
+}
+
+.match-badge--medium {
+  background-color: rgba(154, 123, 79, 0.2);
+  color: var(--color-warning);
+}
+
+.match-badge--low {
+  background-color: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+.match-badge--minimal {
+  background-color: rgba(17, 17, 17, 0.06);
+  color: var(--color-text-muted);
+}
+
+.match-badge--none {
+  background-color: transparent;
+  color: var(--color-text-muted);
+}
+
+/* ========== PREFERENCES BANNER ========== */
+.prefs-banner {
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-accent-subtle);
+  border: var(--border);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-3);
+}
+
+.prefs-banner a {
+  color: var(--color-accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.prefs-banner a:hover {
+  text-decoration: underline;
+}
+
+/* ========== FILTER TOGGLE ========== */
+.filter-toggle {
+  margin-bottom: var(--space-4);
+}
+
+.toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-body);
+  cursor: pointer;
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+/* ========== SETTINGS FORM ADDITIONS ========== */
+.form-field__hint {
+  display: block;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
+
+.form-field__checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-1);
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-body);
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  accent-color: var(--color-accent);
+}
+
+.slider {
+  width: 100%;
+  margin-top: var(--space-1);
+  accent-color: var(--color-accent);
+}
+
+.empty-state--centered {
+  align-items: center;
+  text-align: center;
+  padding: var(--space-5);
+}
+
+.empty-state--centered .empty-state__title {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-heading-lg);
 }
 
 /* ========== RESPONSIVE: MOBILE ========== */
