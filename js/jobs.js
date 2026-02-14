@@ -5,6 +5,62 @@
 const STORAGE_KEY = 'job-tracker-saved-ids';
 const PREFERENCES_KEY = 'jobTrackerPreferences';
 
+function getDigestKey(date) {
+  const d = date || new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `jobTrackerDigest_${y}-${m}-${day}`;
+}
+
+function getTodayDigest() {
+  try {
+    const raw = localStorage.getItem(getDigestKey());
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function generateDigest(prefs) {
+  const jobsWithScore = JOBS_DATA.map((j) => ({
+    ...j,
+    matchScore: computeMatchScore(j, prefs)
+  }));
+  const sorted = jobsWithScore
+    .sort((a, b) => {
+      const sa = a.matchScore ?? -1;
+      const sb = b.matchScore ?? -1;
+      if (sb !== sa) return sb - sa;
+      return (a.postedDaysAgo ?? 99) - (b.postedDaysAgo ?? 99);
+    })
+    .slice(0, 10);
+  const digest = { date: getDigestKey(), jobs: sorted };
+  localStorage.setItem(getDigestKey(), JSON.stringify(digest));
+  return digest;
+}
+
+function getOrCreateTodayDigest(prefs) {
+  const existing = getTodayDigest();
+  if (existing && Array.isArray(existing.jobs) && existing.jobs.length > 0) return existing;
+  return generateDigest(prefs);
+}
+
+function formatDigestPlainText(jobs, dateStr) {
+  const lines = [
+    'Top 10 Jobs For You — 9AM Digest',
+    dateStr || new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+    '',
+    ...jobs.map((j, i) => {
+      const score = j.matchScore != null ? `${j.matchScore}%` : '—';
+      return `${i + 1}. ${j.title} — ${j.company}\n   ${j.location} · ${j.experience} · Match: ${score}\n   ${j.applyUrl}`;
+    }),
+    '',
+    'This digest was generated based on your preferences.'
+  ];
+  return lines.join('\n');
+}
+
 const DEFAULT_PREFERENCES = {
   roleKeywords: '',
   preferredLocations: [],
