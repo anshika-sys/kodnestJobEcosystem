@@ -1,6 +1,5 @@
 /**
- * Job Notification Tracker — Route Skeleton
- * Hash-based routing for static deployment
+ * Job Notification Tracker — Router & Pages
  */
 
 const ROUTES = {
@@ -11,6 +10,15 @@ const ROUTES = {
   '/digest': 'digest',
   '/settings': 'settings',
   '/proof': 'proof'
+};
+
+let currentFilters = {
+  keyword: '',
+  location: '',
+  mode: '',
+  experience: '',
+  source: '',
+  sort: 'latest'
 };
 
 function getRoute() {
@@ -66,20 +74,78 @@ function renderSettings() {
   `;
 }
 
-function renderDashboard() {
+function renderFilterBar() {
+  const opts = getFilterOptions(JOBS_DATA);
   return `
-    <section class="empty-state">
-      <h1 class="empty-state__title">Dashboard</h1>
-      <p class="empty-state__text">No jobs yet. In the next step, you will load a realistic dataset.</p>
+    <div class="filter-bar card">
+      <input type="text" class="input filter-bar__search" placeholder="Search by title or company" id="filter-keyword" value="${escapeHtml(currentFilters.keyword)}">
+      <select class="input filter-bar__select" id="filter-location">
+        <option value="">All locations</option>
+        ${opts.locations.map((l) => `<option value="${escapeHtml(l)}" ${currentFilters.location === l ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('')}
+      </select>
+      <select class="input filter-bar__select" id="filter-mode">
+        <option value="">All modes</option>
+        ${opts.modes.map((m) => `<option value="${escapeHtml(m)}" ${currentFilters.mode === m ? 'selected' : ''}>${escapeHtml(m)}</option>`).join('')}
+      </select>
+      <select class="input filter-bar__select" id="filter-experience">
+        <option value="">All experience</option>
+        ${opts.experiences.map((e) => `<option value="${escapeHtml(e)}" ${currentFilters.experience === e ? 'selected' : ''}>${escapeHtml(e)}</option>`).join('')}
+      </select>
+      <select class="input filter-bar__select" id="filter-source">
+        <option value="">All sources</option>
+        ${opts.sources.map((s) => `<option value="${escapeHtml(s)}" ${currentFilters.source === s ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
+      </select>
+      <select class="input filter-bar__select" id="filter-sort">
+        <option value="latest" ${currentFilters.sort === 'latest' ? 'selected' : ''}>Latest</option>
+        <option value="salary" ${currentFilters.sort === 'salary' ? 'selected' : ''}>Salary (low to high)</option>
+      </select>
+    </div>
+  `;
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function renderDashboard() {
+  const filtered = filterAndSortJobs(JOBS_DATA, currentFilters);
+  const filterBar = renderFilterBar();
+  const jobsHtml = filtered.length
+    ? `<div class="job-grid">${filtered.map((j) => renderJobCard(j, { showUnsave: true })).join('')}</div>`
+    : '<p class="empty-state__text">No jobs match your filters. Try adjusting the filter criteria.</p>';
+
+  return `
+    <section class="dashboard-page">
+      <h1 class="dashboard-page__title">Dashboard</h1>
+      <p class="dashboard-page__subtext">Browse and save jobs that match your interests.</p>
+      ${filterBar}
+      ${jobsHtml}
     </section>
   `;
 }
 
 function renderSaved() {
+  const savedIds = getSavedIds();
+  const savedJobs = JOBS_DATA.filter((j) => savedIds.includes(j.id));
+
+  if (savedJobs.length === 0) {
+    return `
+      <section class="empty-state">
+        <h1 class="empty-state__title">Saved</h1>
+        <p class="empty-state__text">Jobs you save will appear here. Nothing saved yet.</p>
+      </section>
+    `;
+  }
+
+  const cards = savedJobs.map((j) => renderJobCard(j, { showUnsave: true })).join('');
   return `
-    <section class="empty-state">
-      <h1 class="empty-state__title">Saved</h1>
-      <p class="empty-state__text">Jobs you save will appear here. Nothing saved yet.</p>
+    <section class="saved-page">
+      <h1 class="saved-page__title">Saved</h1>
+      <p class="saved-page__subtext">${savedJobs.length} job${savedJobs.length === 1 ? '' : 's'} saved.</p>
+      <div class="job-grid">${cards}</div>
     </section>
   `;
 }
@@ -117,6 +183,92 @@ function renderPage(route) {
 
   const render = renderers[route] || renderLanding;
   container.innerHTML = render();
+  bindPageEvents(route);
+}
+
+function bindPageEvents(route) {
+  if (route === 'dashboard') {
+    bindFilterEvents();
+  }
+
+  document.getElementById('page-content')?.addEventListener('click', (e) => {
+    const viewBtn = e.target.closest('.js-view-job');
+    const saveBtn = e.target.closest('.js-save-job');
+    const unsaveBtn = e.target.closest('.js-unsave-job');
+
+    if (viewBtn) {
+      const id = parseInt(viewBtn.dataset.id, 10);
+      const job = JOBS_DATA.find((j) => j.id === id);
+      if (job) openModal(job);
+    }
+    if (saveBtn) {
+      const id = parseInt(saveBtn.dataset.id, 10);
+      saveJob(id);
+      handleRoute();
+    }
+    if (unsaveBtn) {
+      const id = parseInt(unsaveBtn.dataset.id, 10);
+      unsaveJob(id);
+      handleRoute();
+    }
+  });
+}
+
+function bindFilterEvents() {
+  const keyword = document.getElementById('filter-keyword');
+  const location = document.getElementById('filter-location');
+  const mode = document.getElementById('filter-mode');
+  const experience = document.getElementById('filter-experience');
+  const source = document.getElementById('filter-source');
+  const sort = document.getElementById('filter-sort');
+
+  const applyFilters = () => {
+    currentFilters = {
+      keyword: keyword?.value?.trim() || '',
+      location: location?.value || '',
+      mode: mode?.value || '',
+      experience: experience?.value || '',
+      source: source?.value || '',
+      sort: sort?.value || 'latest'
+    };
+    renderPage('dashboard');
+  };
+
+  keyword?.addEventListener('input', debounce(applyFilters, 200));
+  location?.addEventListener('change', applyFilters);
+  mode?.addEventListener('change', applyFilters);
+  experience?.addEventListener('change', applyFilters);
+  source?.addEventListener('change', applyFilters);
+  sort?.addEventListener('change', applyFilters);
+}
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
+
+function openModal(job) {
+  const container = document.getElementById('modal-container');
+  if (!container) return;
+  container.innerHTML = renderJobModal(job);
+  container.querySelector('.modal-overlay')?.focus();
+
+  const close = () => {
+    container.innerHTML = '';
+    document.removeEventListener('keydown', onKey);
+  };
+
+  const onKey = (e) => {
+    if (e.key === 'Escape') close();
+  };
+
+  container.querySelectorAll('.js-modal-close').forEach((el) => {
+    el.addEventListener('click', close);
+  });
+  document.addEventListener('keydown', onKey);
 }
 
 function updateNav(route) {

@@ -42,6 +42,15 @@
   border-color: var(--color-accent);
 }
 
+a.btn {
+  text-decoration: none;
+}
+
+.btn--sm {
+  padding: 6px var(--space-2);
+  font-size: var(--font-size-small);
+}
+
 /* ========== INPUTS ========== */
 .input {
   width: 100%;
