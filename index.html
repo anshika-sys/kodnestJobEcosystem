@@ -3,67 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KodNest Premium Build System</title>
+  <title>Job Notification Tracker — KodNest</title>
   <link rel="stylesheet" href="css/kodnest-design-system.css">
+  <link rel="stylesheet" href="css/job-tracker.css">
 </head>
 <body>
-  <div class="app">
-    <!-- TOP BAR -->
-    <header class="topbar">
-      <span class="topbar__project">Project Name</span>
-      <span class="topbar__progress">Step 2 / 5</span>
-      <div class="topbar__status">
-        <span class="badge badge--in-progress">In Progress</span>
-      </div>
+  <div class="app app--job-tracker">
+    <!-- TOP NAVIGATION -->
+    <header class="nav-bar">
+      <a href="#/dashboard" class="nav-bar__brand">Job Notification Tracker</a>
+      <button type="button" class="nav-bar__toggle" aria-label="Open menu" aria-expanded="false">
+        <span class="nav-bar__toggle-line"></span>
+        <span class="nav-bar__toggle-line"></span>
+        <span class="nav-bar__toggle-line"></span>
+      </button>
+      <nav class="nav-bar__links" aria-label="Main navigation">
+        <a href="#/dashboard" class="nav-bar__link" data-route="dashboard">Dashboard</a>
+        <a href="#/saved" class="nav-bar__link" data-route="saved">Saved</a>
+        <a href="#/digest" class="nav-bar__link" data-route="digest">Digest</a>
+        <a href="#/settings" class="nav-bar__link" data-route="settings">Settings</a>
+        <a href="#/proof" class="nav-bar__link" data-route="proof">Proof</a>
+      </nav>
     </header>
 
-    <!-- CONTEXT HEADER -->
-    <section class="context-header">
-      <h1 class="context-header__title">Define Your Product</h1>
-      <p class="context-header__subtext">Describe what you're building in one clear sentence.</p>
-    </section>
-
-    <!-- MAIN CONTENT: Workspace + Panel -->
-    <main class="main-content">
-      <!-- PRIMARY WORKSPACE (70%) -->
-      <div class="workspace">
-        <div class="card">
-          <h3 class="heading-md">Product Description</h3>
-          <p class="body-text text-muted">Enter the core idea for your product.</p>
-          <input type="text" class="input" placeholder="e.g. A dashboard that tracks team velocity and blockers">
-        </div>
-        <div class="card">
-          <h3 class="heading-md">Details</h3>
-          <textarea class="input" placeholder="Add any additional context..." rows="3"></textarea>
-        </div>
-      </div>
-
-      <!-- SECONDARY PANEL (30%) -->
-      <aside class="panel">
-        <h2 class="panel__title">Step 2</h2>
-        <p class="panel__description">Write a one-line description. Be specific about the core value.</p>
-        <div class="prompt-box">
-          Create a SaaS product that [your description here]
-        </div>
-        <div class="panel__actions">
-          <button class="btn btn--primary">Copy</button>
-          <button class="btn btn--secondary">Build in Lovable</button>
-          <button class="btn btn--secondary">It Worked</button>
-          <button class="btn btn--secondary">Error</button>
-          <button class="btn btn--secondary">Add Screenshot</button>
-        </div>
-      </aside>
+    <!-- PAGE CONTENT -->
+    <main class="page-content" id="page-content">
+      <section class="placeholder-page">
+        <h1 class="placeholder-page__title">Dashboard</h1>
+        <p class="placeholder-page__subtext">This section will be built in the next step.</p>
+      </section>
     </main>
-
-    <!-- PROOF FOOTER -->
-    <footer class="proof-footer">
-      <ul class="checklist">
-        <li class="checklist__item"><input type="checkbox" class="checklist__checkbox" id="proof-1"> <label for="proof-1">UI Built</label></li>
-        <li class="checklist__item"><input type="checkbox" class="checklist__checkbox" id="proof-2"> <label for="proof-2">Logic Working</label></li>
-        <li class="checklist__item"><input type="checkbox" class="checklist__checkbox" id="proof-3"> <label for="proof-3">Test Passed</label></li>
-        <li class="checklist__item"><input type="checkbox" class="checklist__checkbox" id="proof-4"> <label for="proof-4">Deployed</label></li>
-      </ul>
-    </footer>
   </div>
+
+  <script src="js/router.js"></script>
 </body>
 </html>
